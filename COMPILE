@@ -1,0 +1,5 @@
+DAVIS example:
+gcc -std=c11 -pedantic -Wall -Wextra -O2 -o davis_simple davis_simple.c -D_DEFAULT_SOURCE=1 -lcaer
+
+DAVIS io:
+gcc -std=c11 -pedantic -Wall -Wextra -O2 -o davis_io davis_io.c -D_DEFAULT_SOURCE=1 -lcaer
