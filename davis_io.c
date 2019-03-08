@@ -22,13 +22,16 @@ static void usbShutdownHandler(void *ptr) {
 int main(int argc, char **argv) {
 
 
-    if (argc != 3) {
-        printf("Must specify two file names\n");
+    if ((argc != 3) && (argc!=2)) {
+        printf("Must specify one or two file names\n");
         return (EXIT_FAILURE);
     }
     
-    FILE *file_events = fopen(argv[1], "wb");
-    FILE *file_frames = fopen(argv[2], "wb");
+    FILE *file_events = fopen(argv[1], "wb");    
+    FILE *file_frames = NULL;
+    if (argc == 3) {
+        file_frames = fopen(argv[2], "wb");
+    }
 
 
 // Install signal handler for global shutdown.
@@ -129,6 +132,7 @@ int main(int argc, char **argv) {
     
     
     uint32_t packet_count = 0;
+    uint32_t frame_count = 0;
     int32_t start_time = 0;
     
 	while (!atomic_load_explicit(&globalShutdown, memory_order_relaxed)) {
@@ -158,8 +162,9 @@ int main(int argc, char **argv) {
 				caerPolarityEventConst firstEvent = caerPolarityEventPacketGetEventConst(polarity, 0);
 				int32_t ts = caerPolarityEventGetTimestamp(firstEvent);
 				if (ts > start_time + 1000000) {
-				    printf("packet rate: %d Hz\n", packet_count);
+				    printf("packet rate: %d Hz     frame rate: %d Hz\n", packet_count, frame_count);
 				    packet_count = 0;
+				    frame_count = 0;
 				    start_time += 1000000;
 				}
 				    
@@ -198,27 +203,34 @@ int main(int argc, char **argv) {
 				
 				for (int i=0; i<count; i++) {
     				caerFrameEventConst event = caerFrameEventPacketGetEventConst(frame, i);
+    				
+    				frame_count += 1;
 
 				    int32_t ts   = caerFrameEventGetTimestamp(event);
-				    fwrite(&ts, 4, 1, file_frames);
+				    if (file_frames != NULL) {
+    				    fwrite(&ts, 4, 1, file_frames);
+    				    //fwrite(event->pixels, 2, 240*180, file_frames);
+    				    //fwrite(event->pixels, 2, 6, file_frames);
+                        //int sy = 180; //caerFrameEventGetLengthY(event);
+                        //int sx = 240; //caerFrameEventGetLengthX(event);
+                        //printf("%dx%d\n", sy, sx);
+                        
+                        
+				        //for (int32_t y = 0; y < 180; y++) {
+					    //    for (int32_t x = 0; x < 240; x++) {
+				        //for (int32_t y = 90; y < 91; y++) {
+					    //    for (int32_t x = 120; x < 126; x++) {
+				       		    uint16_t v = caerFrameEventGetPixel(event, x, y);
+				       		    fwrite(&v, 2, 1, file_frames);
+					        }
+				        }
+				        
+    				}
 				    
-				    //fwrite(event->pixels, 2, 6/*240*180*/, file_frames);
 
                     
 
                     
-                    int sy = 180; //caerFrameEventGetLengthY(event);
-                    int sx = 240; //caerFrameEventGetLengthX(event);
-                    //printf("%dx%d\n", sy, sx);
-                    
-				    //for (int32_t y = 0; y < 180; y++) {
-					//    for (int32_t x = 0; x < 240; x++) {
-				    for (int32_t y = 90; y < 91; y++) {
-					    for (int32_t x = 120; x < 126; x++) {
-				   		    uint16_t v = caerFrameEventGetPixel(event, x, y);
-				   		    fwrite(&v, 2, 1, file_frames);
-					    }
-				    }
 				    
 				}
 
@@ -231,8 +243,10 @@ int main(int argc, char **argv) {
 
     fflush(file_events);
     fclose(file_events);	
-    fflush(file_frames);
-    fclose(file_frames);	
+    if (file_frames != NULL) {
+        fflush(file_frames);
+        fclose(file_frames);	
+    }
 
 	caerDeviceDataStop(davis_handle);
 
