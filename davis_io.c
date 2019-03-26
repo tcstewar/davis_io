@@ -129,6 +129,8 @@ int main(int argc, char **argv) {
 	caerDeviceConfigSet(davis_handle, DAVIS_CONFIG_IMU, DAVIS_CONFIG_IMU_RUN_GYROSCOPE, false);
 	caerDeviceConfigSet(davis_handle, DAVIS_CONFIG_IMU, DAVIS_CONFIG_IMU_RUN_TEMPERATURE, false);
 	caerDeviceConfigSet(davis_handle, DAVIS_CONFIG_EXTINPUT, DAVIS_CONFIG_EXTINPUT_RUN_DETECTOR, false);    
+
+    caerDeviceConfigSet(davis_handle, DAVIS_CONFIG_APS, DAVIS_CONFIG_APS_AUTOEXPOSURE, true);
     
     
     uint32_t packet_count = 0;
@@ -216,8 +218,8 @@ int main(int argc, char **argv) {
                         //printf("%dx%d\n", sy, sx);
                         
                         
-				        //for (int32_t y = 0; y < 180; y++) {
-					    //    for (int32_t x = 0; x < 240; x++) {
+				        for (int32_t y = 0; y < 180; y++) {
+					        for (int32_t x = 0; x < 240; x++) {
 				        //for (int32_t y = 90; y < 91; y++) {
 					    //    for (int32_t x = 120; x < 126; x++) {
 				       		    uint16_t v = caerFrameEventGetPixel(event, x, y);
